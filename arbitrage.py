@@ -114,6 +114,54 @@ footer {visibility: hidden;}
 
 </style>
 """, unsafe_allow_html=True)
+/* =====================
+   Expander (新增條件)
+===================== */
+details > summary {
+    background-color: #0a2342 !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    padding: 10px 14px !important;
+    font-weight: 600;
+}
+
+details[open] > summary {
+    background-color: #0a2342 !important;
+}
+
+/* Expander content area */
+details > div {
+    background-color: #f5f7fa !important;
+    padding: 16px 8px 8px 8px !important;
+}
+
+/* =====================
+   Number Input (+ - 按鈕)
+===================== */
+div[data-baseweb="input"] button {
+    background-color: #ffffff !important;
+    color: #0a2342 !important;
+    border-left: 1px solid #d0d5dd !important;
+}
+
+div[data-baseweb="input"] button:hover {
+    background-color: #e6faf4 !important;
+}
+
+/* =====================
+   Plus / Minus container
+===================== */
+div[data-baseweb="spinbutton"] {
+    background-color: #ffffff !important;
+    border-radius: 6px !important;
+}
+
+/* =====================
+   Remove any dark panel
+===================== */
+section.main > div {
+    background-color: transparent !important;
+}
 
 
 
