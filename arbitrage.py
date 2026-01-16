@@ -1,9 +1,12 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="借貸套利計算機",
-    layout="centered"
+    page_title="FinDeck｜借貸套利計算機",
+    page_icon="📊",
+    layout="wide"
 )
+
+st.title("借貸套利計算機")
 
 # =========================
 # 狀態初始化
