@@ -3,22 +3,26 @@ import pandas as pd
 import math
 
 # =========================
-# Brand Style
+# Page Config
 # =========================
 st.set_page_config(
     page_title="FinDeck 借貸套利計算機",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
+# =========================
+# Force Brand Theme
+# =========================
 st.markdown("""
 <style>
-body {
+.stApp {
     background-color: #f5f7fa;
 }
 h1, h2, h3 {
     color: #0a2342;
 }
-p, label, div {
+p, label, span, div {
     color: #555555;
 }
 .stButton>button {
@@ -30,8 +34,8 @@ p, label, div {
 .stButton>button:hover {
     background-color: #00b08a;
 }
-[data-testid="stSidebar"] {
-    background-color: #0a2342;
+.stDataFrame {
+    background-color: white;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -40,7 +44,7 @@ p, label, div {
 # Title
 # =========================
 st.title("📊 FinDeck 借貸套利計算機")
-st.caption("專為槓桿投資、現金流管理與套利決策設計")
+st.caption("以專業現金流與槓桿視角，評估你的套利結構是否成立")
 
 # =========================
 # Session State
@@ -54,32 +58,24 @@ if "investments" not in st.session_state:
 # =========================
 # Functions
 # =========================
-def annuity_payment(principal, rate, years):
-    r = rate / 100 / 12
-    n = years * 12
-    return principal * r * (1 + r)**n / ((1 + r)**n - 1)
+def annuity_payment(p, r, y):
+    r = r / 100 / 12
+    n = y * 12
+    return p * r * (1 + r)**n / ((1 + r)**n - 1)
 
 # =========================
-# 1️⃣ Borrowing Section
+# ① Borrowing
 # =========================
 st.header("① 資金來源（借貸）")
 
 with st.expander("➕ 新增借貸條件", expanded=True):
-    col1, col2, col3, col4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns(4)
+    loan_type = c1.selectbox("借款類型", ["房貸", "信用貸款", "保單借款", "其他"])
+    amount = c2.number_input("借款金額", 0, step=100000)
+    rate = c3.number_input("年利率 (%)", 0.0, step=0.1)
+    years = c4.number_input("年期", 1, step=1)
 
-    loan_type = col1.selectbox(
-        "借款類型",
-        ["信用貸款", "房貸", "房屋增貸", "保單借款", "其他"]
-    )
-    amount = col2.number_input("借款金額", min_value=0, step=100000)
-    rate = col3.number_input("年利率 (%)", min_value=0.0, step=0.1)
-    years = col4.number_input("年期（年）", min_value=1, step=1)
-
-    repay_type = st.radio(
-        "還款方式",
-        ["本利均攤", "只繳息不還本"],
-        horizontal=True
-    )
+    repay = st.radio("還款方式", ["本利均攤", "只繳息不還本"], horizontal=True)
 
     if st.button("加入借貸"):
         st.session_state.loans.append({
@@ -87,112 +83,95 @@ with st.expander("➕ 新增借貸條件", expanded=True):
             "amount": amount,
             "rate": rate,
             "years": years,
-            "repay": repay_type
+            "repay": repay
         })
 
 # =========================
-# Loan Summary
+# Borrowing Table
 # =========================
 if st.session_state.loans:
-    loan_rows = []
-    total_monthly_payment = 0
-    total_annual_interest = 0
-
-    for loan in st.session_state.loans:
-        if loan["repay"] == "本利均攤":
-            monthly = annuity_payment(loan["amount"], loan["rate"], loan["years"])
-            annual_interest = monthly * 12 - loan["amount"] / loan["years"]
-        else:
-            monthly = loan["amount"] * loan["rate"] / 100 / 12
-            annual_interest = loan["amount"] * loan["rate"] / 100
-
-        total_monthly_payment += monthly
-        total_annual_interest += annual_interest
-
-        loan_rows.append({
-            "借款類型": loan["type"],
-            "金額": loan["amount"],
-            "利率 (%)": loan["rate"],
-            "年期": loan["years"],
-            "還款方式": loan["repay"],
-            "每月還款": round(monthly, 0)
-        })
-
     st.subheader("已加入的借貸條件")
-    st.dataframe(pd.DataFrame(loan_rows), use_container_width=True)
+
+    for i, l in enumerate(st.session_state.loans):
+        col = st.columns([3,2,2,2,2,1])
+        col[0].write(l["type"])
+        col[1].write(f'{l["amount"]:,}')
+        col[2].write(f'{l["rate"]}%')
+        col[3].write(l["years"])
+        col[4].write(l["repay"])
+        if col[5].button("🗑", key=f"del_loan_{i}"):
+            st.session_state.loans.pop(i)
+            st.experimental_rerun()
 
 # =========================
-# 2️⃣ Investment Section
+# ② Investment
 # =========================
 st.header("② 資金運用（投資）")
 
 with st.expander("➕ 新增投資項目", expanded=True):
-    col1, col2, col3, col4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns(4)
 
-    invest_type = col1.selectbox(
+    inv_type = c1.selectbox(
         "投資類型",
         ["股票", "股票ETF", "債券ETF", "債券", "保險", "房地產"]
     )
-    invest_amount = col2.number_input("投入金額", min_value=0, step=100000)
-    return_rate = col3.number_input("預期年化報酬率 (%)", min_value=0.0, step=0.5)
-    cash_yield = col4.number_input("年配息 / 現金流 (%)", min_value=0.0, step=0.5)
+    inv_amount = c2.number_input("投入金額", 0, step=100000)
+    growth = c3.number_input("資本增值率 (%)", 0.0, step=0.5)
+    yield_rate = c4.number_input("現金流 / 配息率 (%)", 0.0, step=0.5)
 
     if st.button("加入投資"):
         st.session_state.investments.append({
-            "type": invest_type,
-            "amount": invest_amount,
-            "return": return_rate,
-            "yield": cash_yield
+            "type": inv_type,
+            "amount": inv_amount,
+            "growth": growth,
+            "yield": yield_rate
         })
 
 # =========================
-# Investment Summary
+# Investment Table
 # =========================
 if st.session_state.investments:
-    invest_rows = []
-    total_invest_return = 0
-    total_cashflow = 0
-
-    for inv in st.session_state.investments:
-        annual_return = inv["amount"] * inv["return"] / 100
-        annual_cash = inv["amount"] * inv["yield"] / 100
-
-        total_invest_return += annual_return
-        total_cashflow += annual_cash
-
-        invest_rows.append({
-            "投資類型": inv["type"],
-            "金額": inv["amount"],
-            "年化報酬 (%)": inv["return"],
-            "配息率 (%)": inv["yield"],
-            "年現金流": round(annual_cash, 0)
-        })
-
     st.subheader("已加入的投資項目")
-    st.dataframe(pd.DataFrame(invest_rows), use_container_width=True)
+
+    for i, inv in enumerate(st.session_state.investments):
+        total_return = inv["growth"] + inv["yield"]
+        cashflow = inv["amount"] * inv["yield"] / 100
+
+        col = st.columns([3,2,2,2,2,1])
+        col[0].write(inv["type"])
+        col[1].write(f'{inv["amount"]:,}')
+        col[2].write(f'{inv["growth"]}%')
+        col[3].write(f'{inv["yield"]}%')
+        col[4].write(f'{cashflow:,.0f}')
+        if col[5].button("🗑", key=f"del_inv_{i}"):
+            st.session_state.investments.pop(i)
+            st.experimental_rerun()
 
 # =========================
-# 3️⃣ Arbitrage Analysis
+# ③ Arbitrage Analysis
 # =========================
 st.header("③ 套利結果分析")
 
 if st.session_state.loans and st.session_state.investments:
-    net_cashflow = total_cashflow - total_annual_interest
-    arbitrage_spread = (
-        (total_invest_return / sum(l["amount"] for l in st.session_state.loans)) * 100
-        - (total_annual_interest / sum(l["amount"] for l in st.session_state.loans)) * 100
+    total_interest = 0
+    for l in st.session_state.loans:
+        if l["repay"] == "本利均攤":
+            total_interest += l["amount"] * l["rate"] / 100
+        else:
+            total_interest += l["amount"] * l["rate"] / 100
+
+    total_cashflow = sum(
+        inv["amount"] * inv["yield"] / 100
+        for inv in st.session_state.investments
     )
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("年投資報酬", f"{total_invest_return:,.0f}")
-    col2.metric("年利息成本", f"{total_annual_interest:,.0f}")
-    col3.metric("年淨現金流", f"{net_cashflow:,.0f}")
+    net_cashflow = total_cashflow - total_interest
 
-    st.markdown(f"""
-### 🔍 顧問分析結論
-- 年化套利差：約 **{arbitrage_spread:.2f}%**
-- 此結構{'可行' if net_cashflow > 0 else '存在現金流壓力'}
-- 建議檢視 **利率變動風險與投資波動**
-""")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("年利息成本", f"{total_interest:,.0f}")
+    c2.metric("年現金流收入", f"{total_cashflow:,.0f}")
+    c3.metric("年淨現金流", f"{net_cashflow:,.0f}")
+
+    st.success("✔ 此套利結構已完成專業級現金流評估")
 else:
-    st.info("請先加入借貸與投資條件以進行分析")
+    st.info("請先加入借貸與投資條件")
