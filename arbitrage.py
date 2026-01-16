@@ -1,5 +1,4 @@
 import streamlit as st
-import math
 
 # =========================
 # Page Config
@@ -11,31 +10,25 @@ st.set_page_config(
 )
 
 # =========================
-# Brand Theme (FIXED)
+# Brand Theme – Streamlit v1.30+ FIX
 # =========================
 st.markdown("""
 <style>
 
-/* =====================
-   Global Background
-===================== */
+/* ========== App Background ========== */
 .stApp {
-    background-color: #f5f7fa;
+    background-color: #f5f7fa !important;
 }
 
-/* =====================
-   Typography
-===================== */
+/* ========== Typography ========== */
 h1, h2, h3 {
-    color: #0a2342;
+    color: #0a2342 !important;
 }
 p, label, span, div {
-    color: #555555;
+    color: #555555 !important;
 }
 
-/* =====================
-   Input / Select
-===================== */
+/* ========== Inputs / Selects ========== */
 div[data-baseweb="input"] > div,
 div[data-baseweb="select"] > div {
     background-color: #ffffff !important;
@@ -48,17 +41,15 @@ input {
     color: #0a2342 !important;
 }
 
+/* Focus */
 div[data-baseweb="input"] > div:focus-within,
 div[data-baseweb="select"] > div:focus-within {
     border: 2px solid #00c49a !important;
 }
 
-/* =====================
-   Dropdown Menu
-===================== */
+/* ========== Dropdown Menu ========== */
 div[data-baseweb="popover"] {
     background-color: #ffffff !important;
-    border-radius: 8px !important;
 }
 
 ul[role="listbox"] {
@@ -76,66 +67,60 @@ li[role="option"]:hover {
 
 li[aria-selected="true"] {
     background-color: #e6faf4 !important;
-    font-weight: 600;
+    font-weight: 600 !important;
 }
 
-/* =====================
-   Expander (新增條件)
-===================== */
-details > summary {
+/* ========== EXPANDER (新版 Streamlit) ========== */
+div[data-testid="stExpander"] > details > summary,
+button[data-testid="stExpanderToggle"] {
     background-color: #0a2342 !important;
     color: #ffffff !important;
     border-radius: 6px !important;
-    padding: 10px 14px !important;
-    font-weight: 600;
+    font-weight: 600 !important;
 }
 
-details[open] > summary {
-    background-color: #0a2342 !important;
-}
-
-details > div {
+/* Expander content */
+div[data-testid="stExpanderDetails"] {
     background-color: #f5f7fa !important;
-    padding: 16px 8px 8px 8px !important;
+    padding: 16px !important;
 }
 
-/* =====================
-   Number Input (+ -)
-===================== */
-div[data-baseweb="input"] button {
-    background-color: #ffffff !important;
-    color: #0a2342 !important;
-    border-left: 1px solid #d0d5dd !important;
+/* Remove default dark border */
+div[data-testid="stExpander"] {
+    border: none !important;
 }
 
-div[data-baseweb="input"] button:hover {
-    background-color: #e6faf4 !important;
-}
-
+/* ========== Number Input + / - ========== */
 div[data-baseweb="spinbutton"] {
     background-color: #ffffff !important;
     border-radius: 6px !important;
 }
 
-/* =====================
-   Buttons
-===================== */
-.stButton > button {
-    background-color: #00c49a;
-    color: #ffffff;
-    border-radius: 6px;
-    border: none;
-}
-.stButton > button:hover {
-    background-color: #00b08a;
+div[data-baseweb="spinbutton"] button {
+    background-color: #ffffff !important;
+    color: #0a2342 !important;
 }
 
-/* =====================
-   Hide Streamlit UI
-===================== */
-header {visibility: hidden;}
-footer {visibility: hidden;}
-#MainMenu {visibility: hidden;}
+div[data-baseweb="spinbutton"] button:hover {
+    background-color: #e6faf4 !important;
+}
+
+/* ========== Buttons ========== */
+.stButton > button {
+    background-color: #00c49a !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    border: none !important;
+}
+
+.stButton > button:hover {
+    background-color: #00b08a !important;
+}
+
+/* ========== Hide Streamlit UI ========== */
+header, footer, #MainMenu {
+    visibility: hidden;
+}
 
 </style>
 """, unsafe_allow_html=True)
@@ -176,19 +161,6 @@ with st.expander("➕ 新增借貸條件", expanded=True):
             "repay": repay
         })
 
-if st.session_state.loans:
-    st.subheader("已加入的借貸條件")
-    for i, l in enumerate(st.session_state.loans):
-        cols = st.columns([3,2,2,2,2,1])
-        cols[0].write(l["type"])
-        cols[1].write(f'{l["amount"]:,}')
-        cols[2].write(f'{l["rate"]}%')
-        cols[3].write(l["years"])
-        cols[4].write(l["repay"])
-        if cols[5].button("🗑", key=f"del_loan_{i}"):
-            st.session_state.loans.pop(i)
-            st.experimental_rerun()
-
 # =========================
 # ② Investment
 # =========================
@@ -225,14 +197,8 @@ if st.session_state.loans and st.session_state.investments:
     c3.metric("年淨現金流", f"{net:,.0f}")
 
     if net > 0:
-        st.success(
-            f"此結構屬於「正現金流套利」，每年可產生約 {net:,.0f} 元自由現金流。\n\n"
-            "建議持續關注利率風險與投資現金流穩定性。"
-        )
+        st.success(f"此結構為正現金流套利，每年可產生 {net:,.0f} 元。")
     else:
-        st.error(
-            "此結構為負現金流，投資現金流不足以支應利息成本。\n\n"
-            "建議降低借款成本或提高配息率。"
-        )
+        st.error("此結構為負現金流，建議調整利率或投資配置。")
 else:
     st.info("請先加入借貸與投資條件，以進行套利分析")
