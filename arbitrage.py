@@ -16,12 +16,17 @@ st.set_page_config(
 # =========================
 st.markdown("""
 <style>
-/* App Background */
+
+/* =====================
+   Global App Background
+===================== */
 .stApp {
     background-color: #f5f7fa;
 }
 
-/* Typography */
+/* =====================
+   Typography
+===================== */
 h1, h2, h3 {
     color: #0a2342;
 }
@@ -29,12 +34,14 @@ p, label, span, div {
     color: #555555;
 }
 
-/* Inputs background */
-div[data-baseweb="select"] > div,
-div[data-baseweb="input"] > div {
+/* =====================
+   Input & Select Base
+===================== */
+div[data-baseweb="input"] > div,
+div[data-baseweb="select"] > div {
     background-color: #ffffff !important;
-    border: 1px solid #d0d5dd;
-    border-radius: 6px;
+    border: 1px solid #d0d5dd !important;
+    border-radius: 6px !important;
 }
 
 /* Input text */
@@ -43,16 +50,47 @@ input {
     background-color: #ffffff !important;
 }
 
-/* Focus state */
-div[data-baseweb="select"] > div:focus-within,
-div[data-baseweb="input"] > div:focus-within {
+/* Focus */
+div[data-baseweb="input"] > div:focus-within,
+div[data-baseweb="select"] > div:focus-within {
     border: 2px solid #00c49a !important;
 }
 
-/* Buttons */
+/* =====================
+   Dropdown Menu (關鍵！)
+===================== */
+div[data-baseweb="popover"] {
+    background-color: #ffffff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+}
+
+ul[role="listbox"] {
+    background-color: #ffffff !important;
+    padding: 4px !important;
+}
+
+li[role="option"] {
+    background-color: #ffffff !important;
+    color: #0a2342 !important;
+    border-radius: 6px !important;
+}
+
+li[role="option"]:hover {
+    background-color: #f0fdf9 !important;
+}
+
+li[aria-selected="true"] {
+    background-color: #e6faf4 !important;
+    font-weight: 600;
+}
+
+/* =====================
+   Buttons
+===================== */
 .stButton > button {
     background-color: #00c49a;
-    color: white;
+    color: #ffffff;
     border-radius: 6px;
     border: none;
 }
@@ -60,12 +98,23 @@ div[data-baseweb="input"] > div:focus-within {
     background-color: #00b08a;
 }
 
-/* Tables */
+/* =====================
+   Tables
+===================== */
 .stDataFrame {
     background-color: #ffffff;
 }
+
+/* =====================
+   Hide Streamlit UI
+===================== */
+header {visibility: hidden;}
+footer {visibility: hidden;}
+#MainMenu {visibility: hidden;}
+
 </style>
 """, unsafe_allow_html=True)
+
 
 
 # =========================
