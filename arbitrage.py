@@ -16,29 +16,57 @@ st.set_page_config(
 # =========================
 st.markdown("""
 <style>
+/* App Background */
 .stApp {
     background-color: #f5f7fa;
 }
+
+/* Typography */
 h1, h2, h3 {
     color: #0a2342;
 }
 p, label, span, div {
     color: #555555;
 }
-.stButton>button {
+
+/* Inputs background */
+div[data-baseweb="select"] > div,
+div[data-baseweb="input"] > div {
+    background-color: #ffffff !important;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+}
+
+/* Input text */
+input {
+    color: #0a2342 !important;
+    background-color: #ffffff !important;
+}
+
+/* Focus state */
+div[data-baseweb="select"] > div:focus-within,
+div[data-baseweb="input"] > div:focus-within {
+    border: 2px solid #00c49a !important;
+}
+
+/* Buttons */
+.stButton > button {
     background-color: #00c49a;
     color: white;
     border-radius: 6px;
     border: none;
 }
-.stButton>button:hover {
+.stButton > button:hover {
     background-color: #00b08a;
 }
+
+/* Tables */
 .stDataFrame {
-    background-color: white;
+    background-color: #ffffff;
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 # =========================
 # Title
@@ -153,12 +181,11 @@ if st.session_state.investments:
 st.header("③ 套利結果分析")
 
 if st.session_state.loans and st.session_state.investments:
-    total_interest = 0
-    for l in st.session_state.loans:
-        if l["repay"] == "本利均攤":
-            total_interest += l["amount"] * l["rate"] / 100
-        else:
-            total_interest += l["amount"] * l["rate"] / 100
+
+    total_interest = sum(
+        l["amount"] * l["rate"] / 100
+        for l in st.session_state.loans
+    )
 
     total_cashflow = sum(
         inv["amount"] * inv["yield"] / 100
@@ -172,6 +199,20 @@ if st.session_state.loans and st.session_state.investments:
     c2.metric("年現金流收入", f"{total_cashflow:,.0f}")
     c3.metric("年淨現金流", f"{net_cashflow:,.0f}")
 
-    st.success("✔ 此套利結構已完成專業級現金流評估")
+    st.divider()
+
+    if net_cashflow > 0:
+        st.success(
+            f"此結構為「正現金流套利」，每年可產生約 "
+            f"{net_cashflow:,.0f} 元自由現金流。\n\n"
+            "⚠️ 建議留意：升息風險與投資現金流穩定度。"
+        )
+    else:
+        st.error(
+            "此套利結構為「負現金流」，"
+            "代表目前投資現金流不足以支應利息成本。\n\n"
+            "👉 建議調整：降低借款利率、提高配息率或縮小槓桿比例。"
+        )
 else:
-    st.info("請先加入借貸與投資條件")
+    st.info("請先加入借貸與投資條件，以進行套利分析")
+
